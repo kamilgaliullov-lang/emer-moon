@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import type { Mun, AppUser } from '../utils/types';
 
 interface AppState {
@@ -13,6 +14,19 @@ interface AppState {
   setLocale: (locale: string) => void;
   logout: () => void;
 }
+
+// Create a storage that handles SSR gracefully
+const createStorage = (): StateStorage => {
+  // During SSR on web, use a no-op storage
+  if (Platform.OS === 'web' && typeof window === 'undefined') {
+    return {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    };
+  }
+  return AsyncStorage;
+};
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -29,7 +43,8 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'mmuni-storage',
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => createStorage()),
+      skipHydration: Platform.OS === 'web' && typeof window === 'undefined',
     }
   )
 );
