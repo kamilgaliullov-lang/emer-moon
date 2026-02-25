@@ -1,0 +1,140 @@
+{
+  "identity": {
+    "name": "MMuni",
+    "description": "A professional single-screen municipal mobile app for iOS and Android.",
+    "aesthetics": "Apple iOS 18 HIG",
+    "tone": "Professional, Trustworthy, Modern, Efficient, Community-Centric",
+    "principles": [
+      "Fusion over Imitation: Mix municipal utility with consumer-grade polish.",
+      "Emotion First: Trust and clarity are the emotions.",
+      "Content is King: Data visibility over decoration.",
+      "Zoom In: Focus on essential details (e.g., specific event time).",
+      "Negative Space: Generous padding for a premium feel."
+    ]
+  },
+  "technical_stack": {
+    "framework": "React Native (Expo)",
+    "styling": "NativeWind (Tailwind CSS)",
+    "navigation": "Single Screen + Bottom Sheets (@gorhom/bottom-sheet)",
+    "icons": "lucide-react-native",
+    "animation": "react-native-reanimated",
+    "gestures": "react-native-gesture-handler",
+    "blur": "expo-blur",
+    "haptics": "expo-haptics"
+  },
+  "setup_instructions": [
+    "yarn add nativewind tailwindcss",
+    "yarn add react-native-reanimated react-native-gesture-handler",
+    "yarn add @gorhom/bottom-sheet",
+    "yarn add lucide-react-native",
+    "yarn add clsx tailwind-merge",
+    "yarn add expo-blur expo-haptics expo-linear-gradient",
+    "npx tailwindcss init"
+  ],
+  "design_system": {
+    "typography": {
+      "font_family": "System (San Francisco)",
+      "scales": {
+        "h1": "text-4xl font-bold tracking-tight text-neutral-900",
+        "h2": "text-2xl font-semibold tracking-tight text-neutral-900",
+        "h3": "text-xl font-semibold text-neutral-900",
+        "body": "text-base font-normal text-neutral-600 leading-relaxed",
+        "caption": "text-xs font-medium text-neutral-400 uppercase tracking-widest",
+        "button": "text-base font-semibold text-white"
+      }
+    },
+    "colors": {
+      "palette": {
+        "primary": "#007AFF",
+        "background": "#F2F2F7",
+        "surface": "#FFFFFF",
+        "text_primary": "#000000",
+        "text_secondary": "#8E8E93",
+        "border": "#E5E5EA"
+      },
+      "spheres": {
+        "governance": "#007AFF",
+        "social": "#FF3B30",
+        "infrastructure": "#FFCC00",
+        "environment": "#34C759"
+      },
+      "utils": {
+        "governance_bg": "bg-blue-500",
+        "social_bg": "bg-red-500",
+        "infrastructure_bg": "bg-yellow-400",
+        "environment_bg": "bg-green-500",
+        "governance_text": "text-blue-500",
+        "social_text": "text-red-500",
+        "infrastructure_text": "text-yellow-500",
+        "environment_text": "text-green-500",
+        "governance_border": "border-blue-500",
+        "social_border": "border-red-500",
+        "infrastructure_border": "border-yellow-400",
+        "environment_border": "border-green-500"
+      }
+    },
+    "layout": {
+      "spacing": {
+        "container": "p-6",
+        "section_gap": "gap-8",
+        "item_gap": "gap-4"
+      },
+      "radius": {
+        "card": "rounded-[28px]",
+        "button": "rounded-full",
+        "sheet": "rounded-t-[32px]"
+      },
+      "shadows": {
+        "soft": "shadow-sm shadow-black/5",
+        "floating": "shadow-lg shadow-black/10"
+      }
+    }
+  },
+  "components": {
+    "StartScreen": {
+      "description": "Clean, minimalist login/register with municipality picker.",
+      "layout": "Flex column, centered content, bottom-aligned actions.",
+      "bg_style": "bg-white"
+    },
+    "Glagne": {
+      "description": "Main Dashboard. Sticky header, scrollable content.",
+      "elements": [
+        "Sticky Header: BlurView, Municipality Name, Settings Icon",
+        "Weather Widget: Large card, gradient or glass",
+        "Filter Spheres: Horizontal scroll or grid of circular buttons",
+        "News Feed: Vertical list of cards"
+      ]
+    },
+    "ObjectCard": {
+      "description": "Horizontal card for objects (News, Events, Orgs).",
+      "structure": "Row layout. Left image (square), Right content.",
+      "visuals": "Left border 4px solid (Sphere Color). White background. Soft shadow.",
+      "props": ["type", "sphere", "title", "subtitle", "image"]
+    },
+    "BottomSheet": {
+      "library": "@gorhom/bottom-sheet",
+      "style": "bg-white rounded-t-[32px] shadow-2xl",
+      "handle": "w-12 h-1 bg-neutral-300 rounded-full mt-3 self-center"
+    }
+  },
+  "image_assets": {
+    "governance": "https://images.unsplash.com/photo-1765308748720-01cb2a9d5e2e?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "social": "https://images.pexels.com/photos/10351367/pexels-photo-10351367.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+    "infrastructure": "https://images.unsplash.com/photo-1672571054223-b8d86cd9703b?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "environment": "https://images.pexels.com/photos/8543586/pexels-photo-8543586.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+    "user_avatar_1": "https://images.unsplash.com/photo-1714299773947-6ea91e141691?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "user_avatar_2": "https://images.unsplash.com/photo-1766999712946-53366b089e26?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "city_hall": "https://images.unsplash.com/photo-1691425647566-704d1fc116ed?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "map_placeholder": "https://images.unsplash.com/photo-1691425647566-704d1fc116ed?crop=entropy&cs=srgb&fm=jpg&q=85"
+  },
+  "universal_guidelines": [
+    "DO NOT use 'className' if NativeWind is not configured, but these guidelines assume NativeWind.",
+    "Use 'SafeAreaView' from 'react-native-safe-area-context' for root containers.",
+    "Use 'TouchableOpacity' or 'Pressable' for all interactive elements.",
+    "Ensure hit slop is large enough for mobile touch (min 44x44 points).",
+    "Avoid 'box-shadow' CSS syntax; use RN shadow props or Tailwind shadow classes if supported.",
+    "Use 'FlashList' or 'FlatList' for long lists, never 'map' inside a 'ScrollView' for data feeds.",
+    "Images must have 'contentFit=\"cover\"' (expo-image).",
+    "All interactive elements must have 'data-testid' for testing."
+  ]
+}
