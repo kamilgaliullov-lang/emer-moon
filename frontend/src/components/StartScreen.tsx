@@ -27,14 +27,26 @@ export default function StartScreen() {
   const munChooseRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['70%'], []);
 
-  const { data: municipalities } = useQuery({
+  const { data: municipalities, isLoading: munLoading, error: munError } = useQuery({
     queryKey: ['municipalities'],
     queryFn: async () => {
+      console.log('Fetching municipalities from Supabase...');
+      console.log('URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
       const { data, error } = await supabase.from('mun').select('*');
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      console.log('Fetched municipalities:', data?.length);
       return data as Mun[];
     },
   });
+
+  // Log query state for debugging
+  React.useEffect(() => {
+    if (munError) console.error('Municipality query error:', munError);
+    if (municipalities) console.log('Municipalities loaded:', municipalities.length);
+  }, [municipalities, munError]);
 
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
