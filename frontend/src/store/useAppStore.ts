@@ -1,4 +1,7 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import type { Mun, AppUser } from '../utils/types';
 
 interface AppState {
@@ -12,16 +15,29 @@ interface AppState {
   logout: () => void;
 }
 
-export const useAppStore = create<AppState>()((set) => ({
-  currentMunId: null,
-  currentMun: null,
-  user: null,
-  locale: 'en',
-  setCurrentMun: (mun) => {
-    console.log('setCurrentMun called with:', mun?.mun_name, mun?.mun_id);
-    set({ currentMun: mun, currentMunId: mun?.mun_id || null });
-  },
-  setUser: (user) => set({ user }),
-  setLocale: (locale) => set({ locale }),
-  logout: () => set({ user: null, currentMunId: null, currentMun: null }),
-}));
+// Check if we're in browser environment
+const isBrowser = typeof window !== 'undefined';
+
+export const useAppStore = create<AppState>()(
+  persist(
+    (set) => ({
+      currentMunId: null,
+      currentMun: null,
+      user: null,
+      locale: 'en',
+      setCurrentMun: (mun) =>
+        set({ currentMun: mun, currentMunId: mun?.mun_id || null }),
+      setUser: (user) => set({ user }),
+      setLocale: (locale) => set({ locale }),
+      logout: () => set({ user: null, currentMunId: null, currentMun: null }),
+    }),
+    {
+      name: 'mmuni-storage',
+      storage: createJSONStorage(() => 
+        Platform.OS === 'web' 
+          ? (isBrowser ? localStorage : { getItem: () => null, setItem: () => {}, removeItem: () => {} })
+          : AsyncStorage
+      ),
+    }
+  )
+);
