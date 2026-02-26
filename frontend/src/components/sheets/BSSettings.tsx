@@ -6,7 +6,7 @@ import {
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, Globe } from 'lucide-react-native';
 import { supabase } from '../../services/supabase';
 import { useAppStore } from '../../store/useAppStore';
 import { COLORS, RADIUS } from '../../utils/constants';
@@ -17,11 +17,12 @@ interface Props {
 }
 
 export default function BSSettings({ onDismiss }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const user = useAppStore((s) => s.user);
   const currentMun = useAppStore((s) => s.currentMun);
   const setUser = useAppStore((s) => s.setUser);
   const setCurrentMun = useAppStore((s) => s.setCurrentMun);
+  const setLocale = useAppStore((s) => s.setLocale);
   const logout = useAppStore((s) => s.logout);
   const queryClient = useQueryClient();
 
@@ -32,6 +33,11 @@ export default function BSSettings({ onDismiss }: Props) {
   const [showMunPicker, setShowMunPicker] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+
+  const changeLanguage = (lang: string) => {
+    i18n.changeLanguage(lang);
+    setLocale(lang);
+  };
 
   useEffect(() => {
     setName(user?.user_name || '');
