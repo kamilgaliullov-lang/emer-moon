@@ -194,7 +194,7 @@ export default function BSSettings({ onDismiss }: Props) {
         <TextInput testID="settings-email" style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" placeholderTextColor={COLORS.textTertiary} />
 
         <Text style={styles.label}>{t('password')}</Text>
-        <TextInput testID="settings-password" style={styles.input} value={password} onChangeText={setPassword} secureTextEntry placeholder={user ? 'New password (optional)' : t('password')} placeholderTextColor={COLORS.textTertiary} />
+        <TextInput testID="settings-password" style={styles.input} value={password} onChangeText={setPassword} secureTextEntry placeholder={user ? t('new_password_optional') : t('password')} placeholderTextColor={COLORS.textTertiary} />
 
         <TouchableOpacity testID="select-mun-btn" style={styles.munBtn} onPress={() => setShowMunPicker(true)}>
           <Text style={styles.munBtnLabel}>{t('select_your_municipality')}</Text>
