@@ -219,6 +219,33 @@ export default function BSSettings({ onDismiss }: Props) {
           </View>
         )}
 
+        <View style={styles.languageSection}>
+          <View style={styles.languageHeader}>
+            <Globe size={20} color={COLORS.textSecondary} />
+            <Text style={styles.languageLabel}>{t('language')}</Text>
+          </View>
+          <View style={styles.languageButtons}>
+            <TouchableOpacity
+              testID="lang-en-btn"
+              style={[styles.langBtn, i18n.language === 'en' && styles.langBtnActive]}
+              onPress={() => changeLanguage('en')}
+            >
+              <Text style={[styles.langBtnText, i18n.language === 'en' && styles.langBtnTextActive]}>
+                {t('english')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              testID="lang-ru-btn"
+              style={[styles.langBtn, i18n.language === 'ru' && styles.langBtnActive]}
+              onPress={() => changeLanguage('ru')}
+            >
+              <Text style={[styles.langBtnText, i18n.language === 'ru' && styles.langBtnTextActive]}>
+                {t('russian')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <TouchableOpacity testID="save-btn" style={styles.saveBtn} onPress={handleSave}>
           <Text style={styles.saveBtnText}>{t('save_changes')}</Text>
         </TouchableOpacity>
