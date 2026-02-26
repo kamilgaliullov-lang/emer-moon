@@ -145,7 +145,13 @@ export default function StartScreen() {
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      Alert.alert(t('error'), err.message || t('error_login_failed'));
+      let errorMessage = t('error_login_failed');
+      if (err.message?.includes('Invalid login credentials')) {
+        errorMessage = 'Invalid email or password. If you registered recently, please check your email for verification link.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      Alert.alert(t('error'), errorMessage);
     } finally {
       setLoading(false);
     }
