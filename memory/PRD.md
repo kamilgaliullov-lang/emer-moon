@@ -32,30 +32,50 @@ Build a professional, single-screen mobile application named "MMuni" for iOS and
 
 ## What's Been Implemented
 
-### Session: February 25, 2026
+### Session 1: February 25, 2026
+- Fixed Expo crash loop
+- StartScreen and Glagne basic rendering
 
-#### P0 - Core Navigation Fixed
-- Fixed critical Supabase connection issue (wrong env variable name `EXPO_PUBLIC_SUPABASE_ANON_KEY` -> `EXPO_PUBLIC_SUPABASE_KEY`)
-- Fixed Zustand state management for web platform (removed problematic persist middleware causing hydration issues)
-- **StartScreen** now successfully fetches municipalities from Supabase (5 municipalities: 3 in Kazakhstan, 2 in South Africa)
-- **Municipality Selection Flow** working:
-  - "My Municipality" button opens bottom sheet with country -> region -> municipality hierarchy
-  - "Random Municipality" button navigates directly to first available municipality
-- **Navigation** from StartScreen to Glagne screen working
+### Session 2: February 26, 2026
 
-#### P0 - Glagne Main Screen
-- Weather Widget working (fetching from OpenWeatherMap API via backend proxy)
-- Main sections rendering:
-  - Administration, Documents, Initiatives buttons
-  - Organizations section with 4 spheres (Governance, Social, Infrastructure, Environment)
-  - Events & Initiatives with map placeholder
-  - News section (shows "No data available" when no news exists)
-- FAB buttons (AI chat, Add content for logged-in users)
-- Settings gear icon in header
+#### P0 - State Persistence ✅
+- Implemented custom localStorage persistence for Zustand store
+- Municipality selection now persists across page refreshes
+- Guest users who select "My Municipality" will see Glagne directly on return
 
-#### Backend Proxy
-- `/api/weather` endpoint working - proxies to OpenWeatherMap
-- `/api/health` endpoint available
+#### P1 - Authentication Flow ✅
+- **Registration**: 
+  - Full form with Name, Email, Password, Municipality selection
+  - Opens via "Register" button → BS_Settings bottom sheet
+  - Uses `supabase.auth.signUp()` + creates record in `user` table
+  
+- **Login**:
+  - Email/password login on StartScreen
+  - Uses `supabase.auth.signInWithPassword()`
+  - Automatically navigates to user's saved municipality
+  
+- **Session Management**:
+  - `_layout.tsx` listens to Supabase auth state changes
+  - Restores user session and municipality on app restart
+  - Hydrates state from localStorage on mount
+  
+- **Profile Management** (BS_Settings):
+  - Update name, email, password
+  - Change municipality
+  - Toggle activist status (for registered users)
+  - Logout functionality
+  - Delete account option
+
+---
+
+## Completed Features
+- [x] State persistence (localStorage)
+- [x] Municipality selection (My Municipality / Random)
+- [x] Navigation: StartScreen ↔ Glagne
+- [x] Weather widget integration
+- [x] Authentication: Registration, Login, Logout
+- [x] User profile management in BS_Settings
+- [x] i18n setup (English translations)
 
 ---
 
@@ -63,7 +83,7 @@ Build a professional, single-screen mobile application named "MMuni" for iOS and
 
 ### P2 - Non-Critical
 1. **Require Cycle Warnings**: Metro bundler shows circular dependency warnings between SheetProvider and individual sheet components
-2. **"import.meta" Error**: Browser console shows this error on page load but app still functions
+2. **React 19 ref deprecation warning**: Minor console warning
 
 ---
 
@@ -73,30 +93,25 @@ Build a professional, single-screen mobile application named "MMuni" for iOS and
 - [ ] BS_List: Implement filtered object list functionality
 - [ ] BS_Object: Implement object detail view with comments
 - [ ] BS_Create: Implement object creation/editing form
-- [ ] BS_Settings: Implement user profile management
 - [ ] BS_Map: Implement map view with react-native-maps
 - [ ] BS_Chat: Wire up to AI Assistant API
 - [ ] BS_Docs: Implement documents list
 
-### Authentication
-- [ ] Login flow with Supabase auth
-- [ ] Registration flow
-- [ ] User role-based permissions
-
-### State Persistence
-- [ ] Re-implement Zustand persist middleware properly for web/native
-- [ ] Session persistence across app restarts
+### User Role Permissions
+- [ ] Show/hide "Add" FAB based on user role
+- [ ] Role-based content creation restrictions
+- [ ] Admin features (reordering, moderation)
 
 ---
 
 ## Future Tasks (P2)
 
-- [ ] i18n implementation (English/Russian)
+- [ ] i18n Russian translations
 - [ ] Admin drag-and-drop reordering in BS_List
 - [ ] Refactor SheetProvider to eliminate require cycles
-- [ ] Content creation by role (registered, activist, admin)
-- [ ] Comments system
+- [ ] Comments system implementation
 - [ ] Likes/dislikes/reports functionality
+- [ ] Mayor verification flow
 
 ---
 
@@ -111,11 +126,9 @@ Build a professional, single-screen mobile application named "MMuni" for iOS and
     ├── .env
     ├── app.json
     ├── package.json
-    ├── tsconfig.json
-    ├── metro.config.js
     └── app/
-    │   ├── _layout.tsx
-    │   ├── index.tsx
+    │   ├── _layout.tsx      # App root, auth listener, hydration
+    │   ├── index.tsx        # Main router (StartScreen/Glagne)
     │   └── +html.tsx
     └── src/
         ├── services/
@@ -123,13 +136,13 @@ Build a professional, single-screen mobile application named "MMuni" for iOS and
         │   ├── i18n.ts
         │   └── supabase.ts
         ├── store/
-        │   └── useAppStore.ts
+        │   └── useAppStore.ts  # Zustand with localStorage persistence
         ├── utils/
         │   ├── constants.ts
         │   └── types.ts
         └── components/
             ├── Glagne.tsx
-            ├── StartScreen.tsx
+            ├── StartScreen.tsx   # Login form included
             ├── ObjectCard.tsx
             ├── RoleBadge.tsx
             ├── WeatherWidget.tsx
@@ -141,10 +154,11 @@ Build a professional, single-screen mobile application named "MMuni" for iOS and
                 ├── BSList.tsx
                 ├── BSMap.tsx
                 ├── BSObject.tsx
-                └── BSSettings.tsx
+                └── BSSettings.tsx  # Registration + Profile management
 ```
 
-## API Credentials
-- Supabase URL & Key: In frontend/.env
-- Weather API: In backend/.env
-- AI Assistant API: In backend/.env (to be configured)
+## Key Files Modified This Session
+- `src/store/useAppStore.ts` - Added localStorage persistence
+- `app/_layout.tsx` - Added hydration call on mount
+- `src/components/sheets/BSSettings.tsx` - Full auth flow (already existed)
+- `src/components/StartScreen.tsx` - Login flow (already existed)
