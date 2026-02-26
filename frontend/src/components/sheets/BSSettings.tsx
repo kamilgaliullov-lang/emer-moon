@@ -76,7 +76,7 @@ export default function BSSettings({ onDismiss }: Props) {
 
   const handleSave = async () => {
     if (!name.trim() || !email.trim()) {
-      Alert.alert('Error', 'Name and email are required');
+      Alert.alert(t('error'), t('error_name_email_required'));
       return;
     }
     try {
@@ -94,9 +94,9 @@ export default function BSSettings({ onDismiss }: Props) {
         if (password) {
           await supabase.auth.updateUser({ password });
         }
-        Alert.alert('Success', 'Profile updated');
+        Alert.alert(t('success'), t('success_profile_updated'));
       } else {
-        if (!password) { Alert.alert('Error', 'Password required for registration'); return; }
+        if (!password) { Alert.alert(t('error'), t('error_password_required')); return; }
         const { data: authData, error: authError } = await supabase.auth.signUp({ email: email.trim(), password });
         if (authError) throw authError;
         if (authData.user) {
@@ -114,17 +114,17 @@ export default function BSSettings({ onDismiss }: Props) {
             .upsert(newUser, { onConflict: 'user_id' });
           if (upsertError) throw upsertError;
           setUser(newUser);
-          Alert.alert('Success', 'Registration complete');
+          Alert.alert(t('success'), t('success_registration_complete'));
         }
       }
       queryClient.invalidateQueries({ queryKey: ['user'] });
     } catch (err: any) {
-      Alert.alert('Error', err.message);
+      Alert.alert(t('error'), err.message);
     }
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(t('delete_account'), 'Are you sure?', [
+    Alert.alert(t('delete_account'), t('confirm_delete_account'), [
       { text: t('cancel'), style: 'cancel' },
       {
         text: t('delete'), style: 'destructive',
