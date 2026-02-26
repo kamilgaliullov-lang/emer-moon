@@ -345,4 +345,10 @@ const styles = StyleSheet.create({
   langBtnActive: { backgroundColor: COLORS.primary },
   langBtnText: { fontSize: 15, fontWeight: '600', color: COLORS.textSecondary },
   langBtnTextActive: { color: '#FFF' },
+  changeMunBtn: {
+    marginTop: 20, height: 50, borderRadius: RADIUS.card,
+    backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: COLORS.border,
+  },
+  changeMunBtnText: { fontSize: 17, fontWeight: '600', color: COLORS.textSecondary },
 });
