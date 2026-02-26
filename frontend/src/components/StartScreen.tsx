@@ -84,13 +84,51 @@ export default function StartScreen() {
     if (!email || !password) { Alert.alert(t('error'), t('error_email_password_required')); return; }
     setLoading(true);
     try {
-      const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      const { data: userData } = await supabase
+      console.log('Attempting login with email:', email);
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      
+      if (authError) {
+        console.error('Auth error:', authError);
+        throw authError;
+      }
+      
+      if (!authData.user) {
+        console.error('No user returned from auth');
+        throw new Error('Login failed - no user data');
+      }
+      
+      console.log('Auth successful, user id:', authData.user.id);
+      
+      const { data: userData, error: userError } = await supabase
         .from('user')
         .select('*')
         .eq('user_id', authData.user.id)
         .single();
+      
+      if (userError) {
+        console.error('Error fetching user data:', userError);
+        // User authenticated but no profile - create one
+        if (userError.code === 'PGRST116') { // No rows returned
+          console.log('No user profile found, creating one...');
+          const newUser = {
+            user_id: authData.user.id,
+            user_name: authData.user.email?.split('@')[0] || 'User',
+            user_email: authData.user.email,
+            user_mun: null,
+            user_role: 'registered' as const,
+            user_premium: false,
+          };
+          const { error: insertError } = await supabase.from('user').upsert(newUser, { onConflict: 'user_id' });
+          if (!insertError) {
+            setUser(newUser);
+            Alert.alert(t('success'), t('success_profile_updated'));
+          }
+        }
+        return;
+      }
+      
+      console.log('User data fetched:', userData?.user_email);
+      
       if (userData) {
         setUser(userData);
         if (userData.user_mun) {
@@ -99,10 +137,14 @@ export default function StartScreen() {
             .select('*')
             .eq('mun_id', userData.user_mun)
             .single();
-          if (munData) setCurrentMun(munData);
+          if (munData) {
+            console.log('Setting municipality:', munData.mun_name);
+            setCurrentMun(munData);
+          }
         }
       }
     } catch (err: any) {
+      console.error('Login error:', err);
       Alert.alert(t('error'), err.message || t('error_login_failed'));
     } finally {
       setLoading(false);
