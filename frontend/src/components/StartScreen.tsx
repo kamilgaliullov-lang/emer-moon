@@ -81,7 +81,7 @@ export default function StartScreen() {
   };
 
   const handleLogin = async () => {
-    if (!email || !password) { Alert.alert('Error', 'Please enter email and password'); return; }
+    if (!email || !password) { Alert.alert(t('error'), t('error_email_password_required')); return; }
     setLoading(true);
     try {
       const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -103,7 +103,7 @@ export default function StartScreen() {
         }
       }
     } catch (err: any) {
-      Alert.alert('Login Error', err.message || 'Login failed');
+      Alert.alert(t('error'), err.message || t('error_login_failed'));
     } finally {
       setLoading(false);
     }
