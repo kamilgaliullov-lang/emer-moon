@@ -20,8 +20,13 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const setUser = useAppStore((s) => s.setUser);
+  const hydrateFromStorage = useAppStore((s) => s.hydrateFromStorage);
 
   useEffect(() => {
+    // Hydrate municipality selection from localStorage
+    hydrateFromStorage();
+    
+    // Handle Supabase auth session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         supabase
