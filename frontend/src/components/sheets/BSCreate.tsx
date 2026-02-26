@@ -94,7 +94,7 @@ export default function BSCreate({ editObj, onDismiss }: Props) {
       onDismiss();
     },
     onError: (err: any) => {
-      Alert.alert('Error', err.message);
+      Alert.alert(t('error'), err.message);
     },
   });
 
