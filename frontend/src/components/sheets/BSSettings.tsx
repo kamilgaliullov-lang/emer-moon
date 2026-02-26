@@ -108,8 +108,11 @@ export default function BSSettings({ onDismiss }: Props) {
             user_role: 'registered' as const,
             user_premium: false,
           };
-          const { error: insertError } = await supabase.from('user').insert(newUser);
-          if (insertError) throw insertError;
+          // Use upsert to handle cases where user record already exists with default values
+          const { error: upsertError } = await supabase
+            .from('user')
+            .upsert(newUser, { onConflict: 'user_id' });
+          if (upsertError) throw upsertError;
           setUser(newUser);
           Alert.alert('Success', 'Registration complete');
         }
