@@ -117,7 +117,7 @@ export default function BSObject({ obj }: Props) {
   });
 
   const handleDeleteObj = () => {
-    Alert.alert(t('delete'), 'Are you sure?', [
+    Alert.alert(t('delete'), t('confirm_delete_object'), [
       { text: t('cancel'), style: 'cancel' },
       { text: t('delete'), style: 'destructive', onPress: () => deleteObj.mutate() },
     ]);
@@ -128,7 +128,7 @@ export default function BSObject({ obj }: Props) {
     const reports = obj.obj_reports || [];
     if (reports.includes(user.user_id)) return;
     await supabase.from('obj').update({ obj_reports: [...reports, user.user_id] }).eq('obj_id', obj.obj_id);
-    Alert.alert('Reported');
+    Alert.alert(t('reported'));
   };
 
   return (
