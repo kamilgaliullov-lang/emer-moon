@@ -263,7 +263,7 @@ export default function BSSettings({ onDismiss }: Props) {
         </View>
 
         {isGuest ? (
-          <Text style={styles.guestMsg}>{getConfig('login_message') || 'Please register to unlock all features.'}</Text>
+          <Text style={styles.guestMsg}>{getConfig('login_message') || t('guest_info')}</Text>
         ) : (
           <>
             <TouchableOpacity testID="logout-btn" style={styles.logoutBtn} onPress={handleLogout}>
@@ -274,6 +274,18 @@ export default function BSSettings({ onDismiss }: Props) {
             </TouchableOpacity>
           </>
         )}
+
+        {/* Always show option to change municipality / go back to StartScreen */}
+        <TouchableOpacity 
+          testID="change-mun-btn" 
+          style={styles.changeMunBtn} 
+          onPress={() => {
+            setCurrentMun(null);
+            onDismiss();
+          }}
+        >
+          <Text style={styles.changeMunBtnText}>{t('change_municipality')}</Text>
+        </TouchableOpacity>
       </BottomSheetScrollView>
     </KeyboardAvoidingView>
   );
