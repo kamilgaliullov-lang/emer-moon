@@ -3,158 +3,103 @@
 ## Original Problem Statement
 Build a professional, single-screen mobile application named "MMuni" for iOS and Android using Expo. This is a customizable municipal application that can serve different municipalities.
 
-## Key Requirements
-- **Backend**: Supabase for database
-- **Architecture**: Single-screen UI ("Glagne") with all views opening as stacked Bottom Sheets using `@gorhom/bottom-sheet`
-- **Data Model**: Universal entity "obj" represents all content, filtered by `current_mun_id`
-- **UI/UX**: iOS 18 Human Interface Guidelines, San Francisco font, large corner radii (28px), Lucide Icons
-- **User Roles**: guest, registered, activist, admin, superadmin
-
-## Database Schema
-- **mun**: {mun_id, mun_country, mun_region, mun_name, mun_coordinates}
-- **obj**: {obj_id, obj_mun, obj_type, obj_sphere, obj_title, obj_description, obj_photo, obj_date, obj_author, obj_coordinates, obj_likes, obj_dislikes, obj_reports, obj_sort_order}
-- **user**: {user_id, user_name, user_email, user_mun, user_role, user_premium}
-- **comm**: {comm_id, comm_obj, comm_author, comm_text, comm_date, comm_likes, comm_dislikes, comm_reports}
-- **doc**: {doc_id, doc_mun, doc_author, doc_title, doc_url, doc_date}
-- **config**: {config_id, config_key, config_value}
-
 ## Tech Stack
 - React Native (Expo)
-- Supabase
+- Supabase (database & auth)
 - TanStack Query
 - Zustand
 - @gorhom/bottom-sheet
 - lucide-react-native
-- i18next
-- react-native-maps (placeholder implemented)
-
----
-
-## What's Been Implemented
-
-### Session 2: February 26, 2026
-
-#### P0 - State Persistence ✅
-- Municipality selection persists to localStorage
-- Guest users see Glagne directly on return visits
-
-#### P1 - Authentication Flow ✅
-- Registration (Name, Email, Password, Municipality)
-- Login on StartScreen
-- Session management via Supabase auth listener
-- Logout and Delete Account
-
-#### P1 - Bottom Sheets ✅
-All 7 Bottom Sheets are fully implemented:
-
-| Sheet | Status | Features |
-|-------|--------|----------|
-| **BS_List** | ✅ | Filtered object list by type/sphere, displays ObjectCards |
-| **BS_Object** | ✅ | Object detail, likes/dislikes, comments, edit/delete, report |
-| **BS_Create** | ✅ | Create/edit objects, role-based type restrictions |
-| **BS_Settings** | ✅ | Profile management, registration, logout |
-| **BS_Map** | ✅ | Map placeholder with coordinates, object list |
-| **BS_Chat** | ✅ | AI chat with premium-only restriction |
-| **BS_Docs** | ✅ | Municipal documents list |
-
-#### P1 - Role-Based UI ✅
-- "Add" FAB hidden for guests (only visible for registered+ users)
-- BSCreate restricts object types by role:
-  - `person` → admin/superadmin only
-  - `initiative` → activist/admin/superadmin
-  - `news` → admin/superadmin
-  - `organization`, `event` → registered+
-- Edit/Delete restricted to author or admin
-- AI Chat requires premium subscription
+- i18next (English & Russian)
 
 ---
 
 ## Completed Features
-- [x] State persistence (localStorage)
+
+### Core Navigation & State
 - [x] Municipality selection (My Municipality / Random)
 - [x] Navigation: StartScreen ↔ Glagne
+- [x] State persistence (localStorage) - remembers selected municipality
 - [x] Weather widget integration
-- [x] Authentication: Registration, Login, Logout
-- [x] User profile management
-- [x] BS_List with filtered queries
-- [x] BS_Object with likes, comments, edit/delete
-- [x] BS_Create with role-based restrictions
-- [x] BS_Settings profile management
-- [x] BS_Map with coordinate display
-- [x] BS_Chat with premium lock
-- [x] BS_Docs document list
-- [x] Role-based "Add" FAB visibility
-- [x] i18n setup (English)
+
+### Authentication
+- [x] Registration (Name, Email, Password, Municipality)
+- [x] Login on StartScreen
+- [x] Session management via Supabase auth
+- [x] Logout and Delete Account
+- [x] Bug fix: user_role now correctly set to "registered" on signup (using upsert)
+
+### Bottom Sheets (All 7 Complete)
+- [x] BS_List - Filtered object list by type/sphere
+- [x] BS_Object - Object detail, likes/dislikes, comments, edit/delete
+- [x] BS_Create - Create/edit objects with role-based restrictions
+- [x] BS_Settings - Profile management, auth, language selector
+- [x] BS_Map - Map placeholder with coordinates
+- [x] BS_Chat - AI chat with premium-only restriction
+- [x] BS_Docs - Municipal documents list
+
+### Role-Based UI
+- [x] "Add" FAB hidden for guests
+- [x] BSCreate restricts object types by user role
+- [x] Edit/Delete restricted to author or admin
+- [x] AI Chat requires premium subscription
+
+### Internationalization (i18n)
+- [x] English translations (complete)
+- [x] Russian translations (complete)
+- [x] Language selector in BS_Settings (globe icon + buttons)
+- [x] Instant language switching without page reload
+- [x] All UI text translated including:
+  - Form labels and placeholders
+  - Buttons and actions
+  - Error messages and alerts
+  - Navigation items
+  - Settings options
 
 ---
 
-## Pending Issues
-
-### P2 - Non-Critical
-1. **Require Cycle Warnings**: Metro bundler circular dependency warnings
-2. **React 19 ref deprecation**: Minor console warning
+## Translation Files
+- `/app/frontend/src/locales/en.json` - 85+ English translations
+- `/app/frontend/src/locales/ru.json` - 85+ Russian translations
 
 ---
 
-## Future Tasks (P2)
+## Pending Issues (P2)
+1. Require Cycle Warnings in Metro bundler (non-blocking)
+2. React 19 ref deprecation warning (minor)
 
-- [ ] i18n Russian translations
-- [ ] Admin drag-and-drop reordering in BS_List
-- [ ] Refactor SheetProvider to eliminate require cycles
-- [ ] Implement actual map view with react-native-maps (currently placeholder)
+---
+
+## Future Tasks
+- [ ] Implement actual map view with react-native-maps
 - [ ] Connect AI Chat to actual AI API endpoint
+- [ ] Admin drag-and-drop reordering in BS_List
 - [ ] File/image upload for object photos
+- [ ] Refactor SheetProvider to eliminate require cycles
 
 ---
 
 ## Code Architecture
 ```
-/app
-├── backend
-│   ├── .env
-│   ├── requirements.txt
-│   └── server.py              # Weather & Chat API proxy
-└── frontend
-    ├── .env
-    ├── app.json
-    ├── package.json
-    └── app/
-    │   ├── _layout.tsx        # Root, auth listener, hydration
-    │   ├── index.tsx          # Router (StartScreen/Glagne)
-    │   └── +html.tsx
-    └── src/
-        ├── services/
-        │   ├── api.ts         # Backend API calls
-        │   ├── i18n.ts        # Translations
-        │   └── supabase.ts    # Supabase client
-        ├── store/
-        │   └── useAppStore.ts # Zustand + localStorage
-        ├── utils/
-        │   ├── constants.ts   # Colors, radius, shadows
-        │   └── types.ts       # TypeScript interfaces
-        └── components/
-            ├── Glagne.tsx         # Main screen
-            ├── StartScreen.tsx    # Login + municipality selection
-            ├── ObjectCard.tsx     # Reusable card component
-            ├── RoleBadge.tsx      # User role indicator
-            ├── WeatherWidget.tsx  # Weather display
-            ├── SheetProvider.tsx  # Bottom sheet manager
-            └── sheets/
-                ├── BSChat.tsx     # AI assistant
-                ├── BSCreate.tsx   # Create/edit objects
-                ├── BSDocs.tsx     # Documents list
-                ├── BSList.tsx     # Filtered object list
-                ├── BSMap.tsx      # Map view
-                ├── BSObject.tsx   # Object detail + comments
-                └── BSSettings.tsx # Profile + auth
+/app/frontend/src/
+├── locales/
+│   ├── en.json          # English translations
+│   └── ru.json          # Russian translations
+├── services/
+│   ├── api.ts
+│   ├── i18n.ts          # i18next config
+│   └── supabase.ts
+├── store/
+│   └── useAppStore.ts   # Zustand + localStorage (includes locale)
+└── components/
+    ├── Glagne.tsx
+    ├── StartScreen.tsx
+    └── sheets/
+        ├── BSSettings.tsx  # Language selector added
+        └── ...
 ```
 
-## API Endpoints
-- `/api/weather?lat=X&lng=Y` - Weather proxy
-- `/api/chat` - AI assistant proxy (TODO: connect to actual API)
-- `/api/health` - Health check
-
 ## Environment Variables
-- `EXPO_PUBLIC_SUPABASE_URL` - Supabase project URL
-- `EXPO_PUBLIC_SUPABASE_KEY` - Supabase anon key
-- `EXPO_PUBLIC_BACKEND_URL` - Backend proxy URL
+- `EXPO_PUBLIC_SUPABASE_URL`
+- `EXPO_PUBLIC_SUPABASE_KEY`
+- `EXPO_PUBLIC_BACKEND_URL`
