@@ -322,4 +322,15 @@ const styles = StyleSheet.create({
     paddingVertical: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.border,
   },
   listItemText: { fontSize: 17, color: COLORS.textPrimary },
+  languageSection: { marginTop: 20 },
+  languageHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  languageLabel: { fontSize: 16, fontWeight: '500', color: COLORS.textPrimary },
+  languageButtons: { flexDirection: 'row', gap: 12 },
+  langBtn: {
+    flex: 1, paddingVertical: 12, borderRadius: RADIUS.button,
+    backgroundColor: COLORS.background, alignItems: 'center',
+  },
+  langBtnActive: { backgroundColor: COLORS.primary },
+  langBtnText: { fontSize: 15, fontWeight: '600', color: COLORS.textSecondary },
+  langBtnTextActive: { color: '#FFF' },
 });
