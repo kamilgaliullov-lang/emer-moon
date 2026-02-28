@@ -186,7 +186,8 @@ export default function BSSettings({ onDismiss }: Props) {
       }
       queryClient.invalidateQueries({ queryKey: ['user'] });
     } catch (err: any) {
-      Alert.alert(t('error'), err.message);
+      console.error('=== handleSave ERROR ===', err);
+      Alert.alert(t('error'), err.message || 'Unknown error occurred');
     }
   };
 
