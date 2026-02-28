@@ -128,18 +128,60 @@ export default function BSSettings({ onDismiss }: Props) {
             user_premium: false,
           };
 
-          // Always try to upsert user data immediately after registration
-          // This ensures proper values are set even if email confirmation is required
-          try {
-            const { error: upsertError } = await supabase
-              .from('user')
-              .upsert(newUser, { onConflict: 'user_id' });
-            if (upsertError) {
-              console.error('Failed to upsert user during registration:', upsertError);
+          // Always try to update/insert user data after registration
+          // Wait briefly for any Supabase trigger to create the initial record
+          // Then update with correct values
+          const updateUserProfile = async (retries = 3) => {
+            for (let i = 0; i < retries; i++) {
+              // Small delay to let any trigger complete
+              await new Promise(resolve => setTimeout(resolve, 500 * (i + 1)));
+              
+              try {
+                // First try to update existing record
+                const { data: existingUser, error: selectError } = await supabase
+                  .from('user')
+                  .select('user_id')
+                  .eq('user_id', newUser.user_id)
+                  .single();
+                
+                if (existingUser) {
+                  // Record exists, update it
+                  const { error: updateError } = await supabase
+                    .from('user')
+                    .update({
+                      user_name: newUser.user_name,
+                      user_email: newUser.user_email,
+                      user_mun: newUser.user_mun,
+                      user_role: newUser.user_role,
+                      user_premium: newUser.user_premium,
+                    })
+                    .eq('user_id', newUser.user_id);
+                  
+                  if (!updateError) {
+                    console.log('Successfully updated user profile after registration');
+                    return true;
+                  }
+                  console.error('Update error:', updateError);
+                } else {
+                  // No record exists, insert it
+                  const { error: insertError } = await supabase
+                    .from('user')
+                    .insert(newUser);
+                  
+                  if (!insertError) {
+                    console.log('Successfully inserted user profile after registration');
+                    return true;
+                  }
+                  console.error('Insert error:', insertError);
+                }
+              } catch (err) {
+                console.error(`Attempt ${i + 1} failed:`, err);
+              }
             }
-          } catch (upsertErr) {
-            console.error('Error upserting user during registration:', upsertErr);
-          }
+            return false;
+          };
+          
+          updateUserProfile().catch(console.error);
 
           if (authData.session) {
             setUser(newUser);
