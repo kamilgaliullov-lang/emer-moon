@@ -84,8 +84,8 @@ async def chat(req: ChatRequest):
 @api_router.post("/user/update-profile")
 async def update_user_profile(req: UserProfileRequest):
     """
-    Update user profile using service role key (bypasses RLS).
-    Waits for Supabase trigger to create the record first, then updates it.
+    Create or update user profile using service role key (bypasses RLS).
+    First tries UPDATE, if no record exists - creates via INSERT.
     """
     if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
         logging.error("Supabase credentials not configured")
@@ -93,6 +93,13 @@ async def update_user_profile(req: UserProfileRequest):
     
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
+            headers = {
+                "apikey": SUPABASE_SERVICE_KEY,
+                "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+                "Content-Type": "application/json",
+                "Prefer": "return=representation"
+            }
+            
             # Build update payload
             update_data = {}
             if req.user_name is not None:
@@ -106,44 +113,52 @@ async def update_user_profile(req: UserProfileRequest):
             if req.user_premium is not None:
                 update_data["user_premium"] = req.user_premium
             
-            headers = {
-                "apikey": SUPABASE_SERVICE_KEY,
-                "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
-                "Content-Type": "application/json",
-                "Prefer": "return=representation"
-            }
+            logging.info(f"Trying to update user {req.user_id}: {update_data}")
             
-            # Try to update with retries (wait for trigger to create record)
-            max_retries = 5
-            for attempt in range(max_retries):
-                logging.info(f"Attempt {attempt + 1}/{max_retries} to update user {req.user_id}")
-                
-                resp = await client.patch(
-                    f"{SUPABASE_URL}/rest/v1/user?user_id=eq.{req.user_id}",
-                    headers=headers,
-                    json=update_data
-                )
-                
-                if resp.status_code == 200:
-                    result = resp.json()
-                    if result and len(result) > 0:
-                        logging.info(f"Successfully updated user profile for {req.user_id}")
-                        return {"success": True, "data": result[0]}
-                    else:
-                        # No rows updated - record doesn't exist yet, wait for trigger
-                        logging.info(f"No record found for {req.user_id}, waiting for trigger...")
-                        await asyncio.sleep(1)
-                        continue
+            # First try UPDATE
+            resp = await client.patch(
+                f"{SUPABASE_URL}/rest/v1/user?user_id=eq.{req.user_id}",
+                headers=headers,
+                json=update_data
+            )
+            
+            if resp.status_code == 200:
+                result = resp.json()
+                if result and len(result) > 0:
+                    logging.info(f"Successfully updated user profile for {req.user_id}")
+                    return {"success": True, "data": result[0]}
                 else:
-                    logging.error(f"Failed to update user profile: {resp.status_code} - {resp.text}")
-                    return {"success": False, "error": resp.text}
-            
-            # After all retries, record still doesn't exist
-            logging.error(f"User record not created by trigger after {max_retries} attempts for {req.user_id}")
-            return {"success": False, "error": "User record not found - trigger may have failed"}
+                    # No rows updated - record doesn't exist, create via INSERT
+                    logging.info(f"No record found for {req.user_id}, creating new record...")
+                    
+                    insert_data = {
+                        "user_id": req.user_id,
+                        "user_name": req.user_name,
+                        "user_email": req.user_email,
+                        "user_mun": req.user_mun,
+                        "user_role": req.user_role or "registered",
+                        "user_premium": req.user_premium if req.user_premium is not None else False
+                    }
+                    
+                    insert_resp = await client.post(
+                        f"{SUPABASE_URL}/rest/v1/user",
+                        headers=headers,
+                        json=insert_data
+                    )
+                    
+                    if insert_resp.status_code in [200, 201]:
+                        insert_result = insert_resp.json()
+                        logging.info(f"Successfully created user profile for {req.user_id}")
+                        return {"success": True, "data": insert_result[0] if insert_result else insert_data}
+                    else:
+                        logging.error(f"Failed to create user profile: {insert_resp.status_code} - {insert_resp.text}")
+                        return {"success": False, "error": insert_resp.text}
+            else:
+                logging.error(f"Failed to update user profile: {resp.status_code} - {resp.text}")
+                return {"success": False, "error": resp.text}
                 
     except Exception as e:
-        logging.error(f"User profile update error: {e}")
+        logging.error(f"User profile error: {e}")
         return {"success": False, "error": str(e)}
 
 
