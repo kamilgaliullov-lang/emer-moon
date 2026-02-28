@@ -80,6 +80,57 @@ async def chat(req: ChatRequest):
         return {"error": str(e)}
 
 
+@api_router.post("/user/update-profile")
+async def update_user_profile(req: UserProfileRequest):
+    """
+    Update user profile using service role key (bypasses RLS).
+    Used after registration when user doesn't have an active session yet.
+    """
+    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+        logging.error("Supabase credentials not configured")
+        return {"success": False, "error": "Server configuration error"}
+    
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            # Build update payload (only include non-None values)
+            update_data = {}
+            if req.user_name is not None:
+                update_data["user_name"] = req.user_name
+            if req.user_email is not None:
+                update_data["user_email"] = req.user_email
+            if req.user_mun is not None:
+                update_data["user_mun"] = req.user_mun
+            if req.user_role is not None:
+                update_data["user_role"] = req.user_role
+            if req.user_premium is not None:
+                update_data["user_premium"] = req.user_premium
+            
+            logging.info(f"Updating user profile for {req.user_id}: {update_data}")
+            
+            # Use Supabase REST API with service role key
+            resp = await client.patch(
+                f"{SUPABASE_URL}/rest/v1/user?user_id=eq.{req.user_id}",
+                headers={
+                    "apikey": SUPABASE_SERVICE_KEY,
+                    "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+                    "Content-Type": "application/json",
+                    "Prefer": "return=minimal"
+                },
+                json=update_data
+            )
+            
+            if resp.status_code in [200, 204]:
+                logging.info(f"Successfully updated user profile for {req.user_id}")
+                return {"success": True}
+            else:
+                logging.error(f"Failed to update user profile: {resp.status_code} - {resp.text}")
+                return {"success": False, "error": resp.text}
+                
+    except Exception as e:
+        logging.error(f"User profile update error: {e}")
+        return {"success": False, "error": str(e)}
+
+
 app.include_router(api_router)
 
 app.add_middleware(
