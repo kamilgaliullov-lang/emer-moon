@@ -10,6 +10,7 @@ import { ChevronLeft, Globe } from 'lucide-react-native';
 import { supabase } from '../../services/supabase';
 import { useAppStore } from '../../store/useAppStore';
 import { COLORS, RADIUS } from '../../utils/constants';
+import { updateUserProfile } from '../../services/api';
 import type { Mun } from '../../utils/types';
 
 interface Props {
