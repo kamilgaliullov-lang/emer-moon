@@ -82,12 +82,16 @@ export default function BSSettings({ onDismiss }: Props) {
   }, [municipalities, selectedRegion]);
 
   const handleSave = async () => {
+    console.log('handleSave called - name:', name, 'email:', email, 'user:', !!user, 'currentMun:', currentMun?.mun_id);
+    
     if (!name.trim() || !email.trim()) {
+      console.log('Validation failed: name or email empty');
       Alert.alert(t('error'), t('error_name_email_required'));
       return;
     }
     try {
       if (user) {
+        console.log('Updating existing user');
         const updates: any = {
           user_name: name.trim(),
           user_email: email.trim(),
@@ -103,8 +107,17 @@ export default function BSSettings({ onDismiss }: Props) {
         }
         Alert.alert(t('success'), t('success_profile_updated'));
       } else {
-        if (!password) { Alert.alert(t('error'), t('error_password_required')); return; }
-        if (!currentMun?.mun_id) { Alert.alert(t('error'), t('error_municipality_required')); return; }
+        console.log('New user registration path');
+        if (!password) { 
+          console.log('Validation failed: password empty');
+          Alert.alert(t('error'), t('error_password_required')); 
+          return; 
+        }
+        if (!currentMun?.mun_id) { 
+          console.log('Validation failed: no municipality selected');
+          Alert.alert(t('error'), t('error_municipality_required')); 
+          return; 
+        }
 
         console.log('Starting registration for:', email.trim(), 'with mun:', currentMun.mun_id);
         
