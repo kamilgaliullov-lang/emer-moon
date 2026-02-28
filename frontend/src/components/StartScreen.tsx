@@ -96,6 +96,17 @@ export default function StartScreen() {
         console.error('No user returned from auth');
         throw new Error('Login failed - no user data');
       }
+
+      const fallbackUser = {
+        user_id: authData.user.id,
+        user_name: authData.user.email?.split('@')[0] || 'User',
+        user_email: authData.user.email || '',
+        user_mun: null,
+        user_role: 'registered' as const,
+        user_premium: false,
+      };
+      // Keep user signed in even if profile table read/write fails.
+      setUser(fallbackUser);
       
       console.log('Auth successful, user id:', authData.user.id);
       
@@ -110,21 +121,11 @@ export default function StartScreen() {
         // User authenticated but no profile - create one
         if (userError.code === 'PGRST116') { // No rows returned
           console.log('No user profile found, creating one...');
-          const newUser = {
-            user_id: authData.user.id,
-            user_name: authData.user.email?.split('@')[0] || 'User',
-            user_email: authData.user.email,
-            user_mun: null,
-            user_role: 'registered' as const,
-            user_premium: false,
-          };
-          const { error: insertError } = await supabase.from('user').upsert(newUser, { onConflict: 'user_id' });
+          const { error: insertError } = await supabase.from('user').upsert(fallbackUser, { onConflict: 'user_id' });
           if (!insertError) {
-            setUser(newUser);
             Alert.alert(t('success'), t('success_profile_updated'));
           }
         }
-        return;
       }
       
       console.log('User data fetched:', userData?.user_email);
