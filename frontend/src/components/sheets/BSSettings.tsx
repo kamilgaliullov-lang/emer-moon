@@ -82,13 +82,15 @@ export default function BSSettings({ onDismiss }: Props) {
   }, [municipalities, selectedRegion]);
 
   const handleSave = async () => {
-    console.log('handleSave called - name:', name, 'email:', email, 'user:', !!user, 'currentMun:', currentMun?.mun_id);
-    
-    if (!name.trim() || !email.trim()) {
-      console.log('Validation failed: name or email empty');
-      Alert.alert(t('error'), t('error_name_email_required'));
-      return;
-    }
+    try {
+      console.log('=== handleSave START ===');
+      console.log('handleSave called - name:', name, 'email:', email, 'user:', !!user, 'currentMun:', currentMun?.mun_id);
+      
+      if (!name.trim() || !email.trim()) {
+        console.log('Validation failed: name or email empty');
+        Alert.alert(t('error'), t('error_name_email_required'));
+        return;
+      }
     try {
       if (user) {
         console.log('Updating existing user');
