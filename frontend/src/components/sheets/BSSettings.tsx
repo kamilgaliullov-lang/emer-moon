@@ -108,6 +108,7 @@ export default function BSSettings({ onDismiss }: Props) {
           await supabase.auth.updateUser({ password });
         }
         Alert.alert(t('success'), t('success_profile_updated'));
+        onDismiss(); // Close bottom sheet after successful save
       } else {
         console.log('New user registration path');
         if (!password) { 
