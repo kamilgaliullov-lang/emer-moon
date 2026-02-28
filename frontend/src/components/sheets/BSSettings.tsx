@@ -114,13 +114,23 @@ export default function BSSettings({ onDismiss }: Props) {
             user_role: 'registered' as const,
             user_premium: false,
           };
-          // Use upsert to handle cases where user record already exists with default values
-          const { error: upsertError } = await supabase
-            .from('user')
-            .upsert(newUser, { onConflict: 'user_id' });
-          if (upsertError) throw upsertError;
-          setUser(newUser);
-          Alert.alert(t('success'), t('success_registration_complete'));
+
+          // When email confirmation is enabled, Supabase often returns user but no active session.
+          // In that case, profile writes can fail with RLS because the user is not authenticated yet.
+          if (authData.session) {
+            // Use upsert to handle cases where user record already exists with default values
+            const { error: upsertError } = await supabase
+              .from('user')
+              .upsert(newUser, { onConflict: 'user_id' });
+            if (upsertError) throw upsertError;
+            setUser(newUser);
+            Alert.alert(t('success'), t('success_registration_complete'));
+          } else {
+            Alert.alert(
+              t('success'),
+              t('success_registration_pending_confirmation')
+            );
+          }
         }
       }
       queryClient.invalidateQueries({ queryKey: ['user'] });
