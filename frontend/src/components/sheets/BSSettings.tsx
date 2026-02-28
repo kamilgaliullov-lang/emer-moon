@@ -91,7 +91,7 @@ export default function BSSettings({ onDismiss }: Props) {
         Alert.alert(t('error'), t('error_name_email_required'));
         return;
       }
-    try {
+      
       if (user) {
         console.log('Updating existing user');
         const updates: any = {
