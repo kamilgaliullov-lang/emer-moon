@@ -153,14 +153,14 @@ export default function BSSettings({ onDismiss }: Props) {
           // This bypasses RLS and works even without active session
           const updateProfile = async () => {
             // Small delay to let Supabase trigger create the initial record
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 1500));
             
             const result = await updateUserProfile({
               user_id: newUser.user_id,
               user_name: newUser.user_name,
               user_email: newUser.user_email,
               user_mun: newUser.user_mun,
-              user_role: newUser.user_role,
+              user_role: 'registered',
               user_premium: newUser.user_premium,
             });
             
@@ -171,16 +171,19 @@ export default function BSSettings({ onDismiss }: Props) {
             }
           };
           
-          updateProfile().catch(console.error);
+          // Wait for profile update before showing success
+          await updateProfile();
 
           if (authData.session) {
             setUser(newUser);
             Alert.alert(t('success'), t('success_registration_complete'));
+            onDismiss(); // Close bottom sheet after successful registration
           } else {
             Alert.alert(
               t('success'),
               t('success_registration_pending_confirmation')
             );
+            onDismiss(); // Close bottom sheet
           }
         }
       }
