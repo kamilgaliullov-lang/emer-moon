@@ -18,6 +18,8 @@ WEATHER_API_URL = os.environ.get('WEATHER_API_URL', '')
 WEATHER_API_KEY = os.environ.get('WEATHER_API_KEY', '')
 AI_API_URL = os.environ.get('AI_API_URL', '')
 AI_API_KEY = os.environ.get('AI_API_KEY', '')
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
+SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
 
 
 class ChatRequest(BaseModel):
