@@ -83,7 +83,7 @@ async def chat(req: ChatRequest):
 @api_router.post("/user/update-profile")
 async def update_user_profile(req: UserProfileRequest):
     """
-    Update user profile using service role key (bypasses RLS).
+    Create or update user profile using service role key (bypasses RLS).
     Used after registration when user doesn't have an active session yet.
     """
     if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
@@ -92,42 +92,44 @@ async def update_user_profile(req: UserProfileRequest):
     
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
-            # Build update payload (only include non-None values)
-            update_data = {}
+            # Build upsert payload
+            upsert_data = {
+                "user_id": req.user_id,
+            }
             if req.user_name is not None:
-                update_data["user_name"] = req.user_name
+                upsert_data["user_name"] = req.user_name
             if req.user_email is not None:
-                update_data["user_email"] = req.user_email
+                upsert_data["user_email"] = req.user_email
             if req.user_mun is not None:
-                update_data["user_mun"] = req.user_mun
+                upsert_data["user_mun"] = req.user_mun
             if req.user_role is not None:
-                update_data["user_role"] = req.user_role
+                upsert_data["user_role"] = req.user_role
             if req.user_premium is not None:
-                update_data["user_premium"] = req.user_premium
+                upsert_data["user_premium"] = req.user_premium
             
-            logging.info(f"Updating user profile for {req.user_id}: {update_data}")
+            logging.info(f"Upserting user profile for {req.user_id}: {upsert_data}")
             
-            # Use Supabase REST API with service role key
-            resp = await client.patch(
-                f"{SUPABASE_URL}/rest/v1/user?user_id=eq.{req.user_id}",
+            # Use Supabase REST API with service role key - UPSERT
+            resp = await client.post(
+                f"{SUPABASE_URL}/rest/v1/user",
                 headers={
                     "apikey": SUPABASE_SERVICE_KEY,
                     "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
                     "Content-Type": "application/json",
-                    "Prefer": "return=minimal"
+                    "Prefer": "resolution=merge-duplicates,return=representation"
                 },
-                json=update_data
+                json=upsert_data
             )
             
-            if resp.status_code in [200, 204]:
-                logging.info(f"Successfully updated user profile for {req.user_id}")
-                return {"success": True}
+            if resp.status_code in [200, 201]:
+                logging.info(f"Successfully upserted user profile for {req.user_id}")
+                return {"success": True, "data": resp.json()}
             else:
-                logging.error(f"Failed to update user profile: {resp.status_code} - {resp.text}")
+                logging.error(f"Failed to upsert user profile: {resp.status_code} - {resp.text}")
                 return {"success": False, "error": resp.text}
                 
     except Exception as e:
-        logging.error(f"User profile update error: {e}")
+        logging.error(f"User profile upsert error: {e}")
         return {"success": False, "error": str(e)}
 
 
