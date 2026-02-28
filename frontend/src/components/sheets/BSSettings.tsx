@@ -150,12 +150,9 @@ export default function BSSettings({ onDismiss }: Props) {
             user_premium: false,
           };
 
-          // Use backend API with service role key to update user profile
+          // Use backend API with service role key to create/update user profile
           // This bypasses RLS and works even without active session
-          const updateProfile = async () => {
-            // Small delay to let Supabase trigger create the initial record
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            
+          const createOrUpdateProfile = async (): Promise<boolean> => {
             const result = await updateUserProfile({
               user_id: newUser.user_id,
               user_name: newUser.user_name,
@@ -166,25 +163,30 @@ export default function BSSettings({ onDismiss }: Props) {
             });
             
             if (result.success) {
-              console.log('Successfully updated user profile via backend API');
+              console.log('Successfully created/updated user profile via backend API');
+              return true;
             } else {
-              console.error('Failed to update user profile via backend:', result.error);
+              console.error('Failed to create/update user profile via backend:', result.error);
+              return false;
             }
           };
           
-          // Wait for profile update before showing success
-          await updateProfile();
+          // Wait for profile creation before showing success
+          const profileCreated = await createOrUpdateProfile();
 
-          if (authData.session) {
-            setUser(newUser);
-            Alert.alert(t('success'), t('success_registration_complete'));
-            onDismiss(); // Close bottom sheet after successful registration
+          if (profileCreated) {
+            if (authData.session) {
+              setUser(newUser);
+              Alert.alert(t('success'), t('success_registration_complete'));
+            } else {
+              Alert.alert(
+                t('success'),
+                t('success_registration_pending_confirmation')
+              );
+            }
+            onDismiss(); // Close bottom sheet only after successful DB creation
           } else {
-            Alert.alert(
-              t('success'),
-              t('success_registration_pending_confirmation')
-            );
-            onDismiss(); // Close bottom sheet
+            Alert.alert(t('error'), 'Failed to save user profile to database');
           }
         }
       }
