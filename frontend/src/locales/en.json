@@ -93,5 +93,6 @@
   "activist_info": "You are an activist. Thank you for your contributions!",
   "admin_info": "You are an administrator.",
   "change_municipality": "Change Municipality",
-  "success_registration_pending_confirmation": "Registration is almost complete. Please check your email and confirm your account before login."
+  "success_registration_pending_confirmation": "Registration is almost complete. Please check your email and confirm your account before login.",
+  "error_municipality_required": "Please select a municipality before registration."
 }
