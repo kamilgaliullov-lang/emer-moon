@@ -106,6 +106,8 @@ export default function BSSettings({ onDismiss }: Props) {
         if (!password) { Alert.alert(t('error'), t('error_password_required')); return; }
         if (!currentMun?.mun_id) { Alert.alert(t('error'), t('error_municipality_required')); return; }
 
+        console.log('Starting registration for:', email.trim(), 'with mun:', currentMun.mun_id);
+        
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
@@ -118,6 +120,9 @@ export default function BSSettings({ onDismiss }: Props) {
             },
           },
         });
+        
+        console.log('Auth result:', { user: authData?.user?.id, session: !!authData?.session, error: authError });
+        
         if (authError) throw authError;
         if (authData.user) {
           const newUser = {
