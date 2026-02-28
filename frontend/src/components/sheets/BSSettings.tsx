@@ -128,11 +128,20 @@ export default function BSSettings({ onDismiss }: Props) {
             user_premium: false,
           };
 
-          if (authData.session) {
+          // Always try to upsert user data immediately after registration
+          // This ensures proper values are set even if email confirmation is required
+          try {
             const { error: upsertError } = await supabase
               .from('user')
               .upsert(newUser, { onConflict: 'user_id' });
-            if (upsertError) throw upsertError;
+            if (upsertError) {
+              console.error('Failed to upsert user during registration:', upsertError);
+            }
+          } catch (upsertErr) {
+            console.error('Error upserting user during registration:', upsertErr);
+          }
+
+          if (authData.session) {
             setUser(newUser);
             Alert.alert(t('success'), t('success_registration_complete'));
           } else {
