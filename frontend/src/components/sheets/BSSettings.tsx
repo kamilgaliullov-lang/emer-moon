@@ -129,60 +129,29 @@ export default function BSSettings({ onDismiss }: Props) {
             user_premium: false,
           };
 
-          // Always try to update/insert user data after registration
-          // Wait briefly for any Supabase trigger to create the initial record
-          // Then update with correct values
-          const updateUserProfile = async (retries = 3) => {
-            for (let i = 0; i < retries; i++) {
-              // Small delay to let any trigger complete
-              await new Promise(resolve => setTimeout(resolve, 500 * (i + 1)));
-              
-              try {
-                // First try to update existing record
-                const { data: existingUser, error: selectError } = await supabase
-                  .from('user')
-                  .select('user_id')
-                  .eq('user_id', newUser.user_id)
-                  .single();
-                
-                if (existingUser) {
-                  // Record exists, update it
-                  const { error: updateError } = await supabase
-                    .from('user')
-                    .update({
-                      user_name: newUser.user_name,
-                      user_email: newUser.user_email,
-                      user_mun: newUser.user_mun,
-                      user_role: newUser.user_role,
-                      user_premium: newUser.user_premium,
-                    })
-                    .eq('user_id', newUser.user_id);
-                  
-                  if (!updateError) {
-                    console.log('Successfully updated user profile after registration');
-                    return true;
-                  }
-                  console.error('Update error:', updateError);
-                } else {
-                  // No record exists, insert it
-                  const { error: insertError } = await supabase
-                    .from('user')
-                    .insert(newUser);
-                  
-                  if (!insertError) {
-                    console.log('Successfully inserted user profile after registration');
-                    return true;
-                  }
-                  console.error('Insert error:', insertError);
-                }
-              } catch (err) {
-                console.error(`Attempt ${i + 1} failed:`, err);
-              }
+          // Use backend API with service role key to update user profile
+          // This bypasses RLS and works even without active session
+          const updateProfile = async () => {
+            // Small delay to let Supabase trigger create the initial record
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const result = await updateUserProfile({
+              user_id: newUser.user_id,
+              user_name: newUser.user_name,
+              user_email: newUser.user_email,
+              user_mun: newUser.user_mun,
+              user_role: newUser.user_role,
+              user_premium: newUser.user_premium,
+            });
+            
+            if (result.success) {
+              console.log('Successfully updated user profile via backend API');
+            } else {
+              console.error('Failed to update user profile via backend:', result.error);
             }
-            return false;
           };
           
-          updateUserProfile().catch(console.error);
+          updateProfile().catch(console.error);
 
           if (authData.session) {
             setUser(newUser);
