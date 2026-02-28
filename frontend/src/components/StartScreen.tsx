@@ -17,6 +17,7 @@ import type { Mun } from '../utils/types';
 export default function StartScreen() {
   const { t } = useTranslation();
   const setCurrentMun = useAppStore((s) => s.setCurrentMun);
+  const currentMun = useAppStore((s) => s.currentMun);
   const setUser = useAppStore((s) => s.setUser);
   const { openSettings } = useSheet();
 
@@ -105,6 +106,20 @@ export default function StartScreen() {
         user_role: 'registered' as const,
         user_premium: false,
       };
+      const resolveFallbackMunId = async () => {
+        if (currentMun?.mun_id) return currentMun.mun_id;
+
+        const { data: config } = await supabase
+          .from('config')
+          .select('config_value')
+          .eq('config_key', 'demo_mun')
+          .single();
+
+        if (config?.config_value) return config.config_value;
+        if (municipalities?.length) return municipalities[0].mun_id;
+        return null;
+      };
+
       // Keep user signed in even if profile table read/write fails.
       setUser(fallbackUser);
       
@@ -131,12 +146,41 @@ export default function StartScreen() {
       console.log('User data fetched:', userData?.user_email);
       
       if (userData) {
-        setUser(userData);
-        if (userData.user_mun) {
+        const fallbackMunId = await resolveFallbackMunId();
+        const needsRoleFix = userData.user_role === 'guest';
+        const needsMunFix = !userData.user_mun && !!fallbackMunId;
+
+        const normalizedUser = {
+          ...userData,
+          user_role: needsRoleFix ? 'registered' as const : userData.user_role,
+          user_mun: needsMunFix ? fallbackMunId : userData.user_mun,
+        };
+
+        if (needsRoleFix || needsMunFix) {
+          const { error: patchError } = await supabase
+            .from('user')
+            .update({
+              user_role: normalizedUser.user_role,
+              user_mun: normalizedUser.user_mun,
+            })
+            .eq('user_id', authData.user.id);
+
+          if (patchError) {
+            console.error('Failed to patch user profile after login:', patchError);
+            setUser(userData);
+          } else {
+            setUser(normalizedUser);
+          }
+        } else {
+          setUser(userData);
+        }
+
+        const resolvedMunId = normalizedUser.user_mun;
+        if (resolvedMunId) {
           const { data: munData } = await supabase
             .from('mun')
             .select('*')
-            .eq('mun_id', userData.user_mun)
+            .eq('mun_id', resolvedMunId)
             .single();
           if (munData) {
             console.log('Setting municipality:', munData.mun_name);

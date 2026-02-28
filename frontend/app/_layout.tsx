@@ -20,6 +20,7 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const setUser = useAppStore((s) => s.setUser);
+  const setCurrentMun = useAppStore((s) => s.setCurrentMun);
   const hydrateFromStorage = useAppStore((s) => s.hydrateFromStorage);
 
   useEffect(() => {
@@ -27,16 +28,25 @@ export default function RootLayout() {
     hydrateFromStorage();
     
     // Handle Supabase auth session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        supabase
+        const { data } = await supabase
           .from('user')
           .select('*')
           .eq('user_id', session.user.id)
-          .single()
-          .then(({ data }) => {
-            if (data) setUser(data);
-          });
+          .single();
+
+        if (data) {
+          setUser(data);
+          if (data.user_mun) {
+            const { data: munData } = await supabase
+              .from('mun')
+              .select('*')
+              .eq('mun_id', data.user_mun)
+              .single();
+            if (munData) setCurrentMun(munData);
+          }
+        }
       }
     });
 
@@ -49,9 +59,20 @@ export default function RootLayout() {
           .select('*')
           .eq('user_id', session.user.id)
           .single();
-        if (data) setUser(data);
+        if (data) {
+          setUser(data);
+          if (data.user_mun) {
+            const { data: munData } = await supabase
+              .from('mun')
+              .select('*')
+              .eq('mun_id', data.user_mun)
+              .single();
+            if (munData) setCurrentMun(munData);
+          }
+        }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
+        setCurrentMun(null);
       }
     });
 

@@ -93,5 +93,6 @@
   "activist_info": "Вы активист. Спасибо за ваш вклад!",
   "admin_info": "Вы администратор.",
   "change_municipality": "Сменить муниципалитет",
-  "success_registration_pending_confirmation": "Регистрация почти завершена. Проверьте email и подтвердите аккаунт перед входом."
+  "success_registration_pending_confirmation": "Регистрация почти завершена. Проверьте email и подтвердите аккаунт перед входом.",
+  "error_municipality_required": "Выберите муниципалитет перед регистрацией."
 }

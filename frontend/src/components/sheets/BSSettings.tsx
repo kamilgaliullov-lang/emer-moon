@@ -103,22 +103,32 @@ export default function BSSettings({ onDismiss }: Props) {
         Alert.alert(t('success'), t('success_profile_updated'));
       } else {
         if (!password) { Alert.alert(t('error'), t('error_password_required')); return; }
-        const { data: authData, error: authError } = await supabase.auth.signUp({ email: email.trim(), password });
+        if (!currentMun?.mun_id) { Alert.alert(t('error'), t('error_municipality_required')); return; }
+
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: {
+            data: {
+              user_name: name.trim(),
+              user_email: email.trim(),
+              user_mun: currentMun.mun_id,
+              user_role: 'registered',
+            },
+          },
+        });
         if (authError) throw authError;
         if (authData.user) {
           const newUser = {
             user_id: authData.user.id,
             user_name: name.trim(),
             user_email: email.trim(),
-            user_mun: currentMun?.mun_id || null,
+            user_mun: currentMun.mun_id,
             user_role: 'registered' as const,
             user_premium: false,
           };
 
-          // When email confirmation is enabled, Supabase often returns user but no active session.
-          // In that case, profile writes can fail with RLS because the user is not authenticated yet.
           if (authData.session) {
-            // Use upsert to handle cases where user record already exists with default values
             const { error: upsertError } = await supabase
               .from('user')
               .upsert(newUser, { onConflict: 'user_id' });
