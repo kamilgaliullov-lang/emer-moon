@@ -83,53 +83,66 @@ async def chat(req: ChatRequest):
 @api_router.post("/user/update-profile")
 async def update_user_profile(req: UserProfileRequest):
     """
-    Create or update user profile using service role key (bypasses RLS).
-    Used after registration when user doesn't have an active session yet.
+    Update user profile using service role key (bypasses RLS).
+    Waits for Supabase trigger to create the record first, then updates it.
     """
     if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
         logging.error("Supabase credentials not configured")
         return {"success": False, "error": "Server configuration error"}
     
     try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            # Build upsert payload
-            upsert_data = {
-                "user_id": req.user_id,
-            }
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            # Build update payload
+            update_data = {}
             if req.user_name is not None:
-                upsert_data["user_name"] = req.user_name
+                update_data["user_name"] = req.user_name
             if req.user_email is not None:
-                upsert_data["user_email"] = req.user_email
+                update_data["user_email"] = req.user_email
             if req.user_mun is not None:
-                upsert_data["user_mun"] = req.user_mun
+                update_data["user_mun"] = req.user_mun
             if req.user_role is not None:
-                upsert_data["user_role"] = req.user_role
+                update_data["user_role"] = req.user_role
             if req.user_premium is not None:
-                upsert_data["user_premium"] = req.user_premium
+                update_data["user_premium"] = req.user_premium
             
-            logging.info(f"Upserting user profile for {req.user_id}: {upsert_data}")
+            headers = {
+                "apikey": SUPABASE_SERVICE_KEY,
+                "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+                "Content-Type": "application/json",
+                "Prefer": "return=representation"
+            }
             
-            # Use Supabase REST API with service role key - UPSERT
-            resp = await client.post(
-                f"{SUPABASE_URL}/rest/v1/user",
-                headers={
-                    "apikey": SUPABASE_SERVICE_KEY,
-                    "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
-                    "Content-Type": "application/json",
-                    "Prefer": "resolution=merge-duplicates,return=representation"
-                },
-                json=upsert_data
-            )
+            # Try to update with retries (wait for trigger to create record)
+            max_retries = 5
+            for attempt in range(max_retries):
+                logging.info(f"Attempt {attempt + 1}/{max_retries} to update user {req.user_id}")
+                
+                resp = await client.patch(
+                    f"{SUPABASE_URL}/rest/v1/user?user_id=eq.{req.user_id}",
+                    headers=headers,
+                    json=update_data
+                )
+                
+                if resp.status_code == 200:
+                    result = resp.json()
+                    if result and len(result) > 0:
+                        logging.info(f"Successfully updated user profile for {req.user_id}")
+                        return {"success": True, "data": result[0]}
+                    else:
+                        # No rows updated - record doesn't exist yet, wait for trigger
+                        logging.info(f"No record found for {req.user_id}, waiting for trigger...")
+                        await asyncio.sleep(1)
+                        continue
+                else:
+                    logging.error(f"Failed to update user profile: {resp.status_code} - {resp.text}")
+                    return {"success": False, "error": resp.text}
             
-            if resp.status_code in [200, 201]:
-                logging.info(f"Successfully upserted user profile for {req.user_id}")
-                return {"success": True, "data": resp.json()}
-            else:
-                logging.error(f"Failed to upsert user profile: {resp.status_code} - {resp.text}")
-                return {"success": False, "error": resp.text}
+            # After all retries, record still doesn't exist
+            logging.error(f"User record not created by trigger after {max_retries} attempts for {req.user_id}")
+            return {"success": False, "error": "User record not found - trigger may have failed"}
                 
     except Exception as e:
-        logging.error(f"User profile upsert error: {e}")
+        logging.error(f"User profile update error: {e}")
         return {"success": False, "error": str(e)}
 
 
