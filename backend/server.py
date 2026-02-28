@@ -28,6 +28,15 @@ class ChatRequest(BaseModel):
     user: Optional[str] = "anonymous"
 
 
+class UserProfileRequest(BaseModel):
+    user_id: str
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
+    user_mun: Optional[str] = None
+    user_role: Optional[str] = "registered"
+    user_premium: Optional[bool] = False
+
+
 @api_router.get("/")
 async def root():
     return {"message": "MMuni API", "status": "ok"}
