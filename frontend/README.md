@@ -16,6 +16,32 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npx expo start
    ```
 
+## Запуск приложения на iPhone
+
+1. Установите зависимости в папке `frontend`:
+
+   ```bash
+   npm install
+   ```
+
+2. Запустите Expo-сервер:
+
+   ```bash
+   npx expo start
+   ```
+
+3. На iPhone установите приложение **Expo Go** из App Store.
+
+4. Убедитесь, что iPhone и компьютер находятся в одной Wi‑Fi сети.
+
+5. В терминале с Expo вы увидите QR-код. Откройте камеру на iPhone, отсканируйте QR-код и нажмите ссылку, чтобы открыть проект в Expo Go.
+
+6. Если проект не открывается через LAN, в окне Expo переключите режим сети на **Tunnel** (клавиша `t` в терминале), затем снова отсканируйте QR-код.
+
+7. Для обновления после изменений в коде используйте:
+   - `r` в терминале — перезагрузить бандл;
+   - встряхивание iPhone или жест в Expo Go — открыть меню разработчика и выбрать Reload.
+
 In the output, you'll find options to open the app in a
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
